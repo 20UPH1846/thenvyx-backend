@@ -4,7 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // ─── Middleware ───────────────────────────────────────────────
 app.use(cors({
@@ -13,12 +13,15 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ─── Gmail Transporter ────────────────────────────────────────
+// ─── Gmail Transporter (IPv4 fix for Render) ─────────────────
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  family: 4,
   auth: {
-    user: process.env.GMAIL_USER,     // .env-ல உங்க Gmail
-    pass: process.env.GMAIL_APP_PASS, // Gmail App Password
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASS,
   },
 });
 
