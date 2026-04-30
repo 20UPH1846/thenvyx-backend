@@ -152,7 +152,7 @@ form.addEventListener('submit', async (e) => {
 
   // ── Real API Call to Backend ──────────────────────────────────
   try {
-    const response = await fetch('https://thenvyx-backend.onrender.com/api/contact', { 
+    const response = await fetch('https://thenvyx-backend.onrender.com/api/contact', ...)
 method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
