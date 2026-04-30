@@ -150,10 +150,10 @@ form.addEventListener('submit', async (e) => {
   submitBtn.innerHTML = '<span>Sending...</span><i class="fas fa-spinner fa-spin"></i>';
   submitBtn.disabled = true;
 
-  // ── Real API Call to Backend ──────────────────────────────────
+  // ── Fixed API Call ────────────────────────────────────────────
   try {
-    const response = await fetch('https://thenvyx-backend.onrender.com/api/contact', ...)
-method: 'POST',
+    const response = await fetch('/api/contact', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
