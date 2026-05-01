@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
@@ -9,7 +9,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const TEAM_EMAIL = 'teamthenvyx@gmail.com';
 
@@ -40,11 +39,24 @@ app.post('/api/contact', async (req, res) => {
     });
   }
 
+  const transporter = nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: 'a9dfd8001@smtp-brevo.com',
+      pass: process.env.BREVO_SMTP_KEY,
+    },
+  });
+
+  const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
   try {
-    // ── Email to Team ────────────────────────────────────────
-    const adminResult = await resend.emails.send({
-      from: 'Thenvyx Website <onboarding@resend.dev>',
-      to: [TEAM_EMAIL],
+    // ── Email to Team ─────────────────────────────────────────
+    await transporter.sendMail({
+      from: `"Thenvyx Website" <${TEAM_EMAIL}>`,
+      to: TEAM_EMAIL,
+      replyTo: email,
       subject: `📩 New Contact: ${subject} — from ${name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fc; border-radius: 12px; overflow: hidden;">
@@ -81,20 +93,18 @@ app.post('/api/contact', async (req, res) => {
             </div>
           </div>
           <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
-            <p>© 2026 Thenvyx Tech | Received at ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
+            <p>© 2026 Thenvyx Tech | Received at ${istTime} IST</p>
           </div>
         </div>
       `,
     });
 
-    console.log('✅ Team email sent:', adminResult);
+    console.log('✅ Team email sent');
 
-    // ── Confirmation Email to Client ─────────────────────────
-    // NOTE: On Resend free plan, this only delivers to verified emails.
-    // To send to ALL clients, verify your domain in Resend dashboard.
-    const clientResult = await resend.emails.send({
-      from: 'Thenvyx Tech <onboarding@resend.dev>',
-      to: [email],
+    // ── Confirmation Email to Client ──────────────────────────
+    await transporter.sendMail({
+      from: `"Thenvyx Tech" <${TEAM_EMAIL}>`,
+      to: email,
       subject: `✅ We received your message, ${name}!`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fc; border-radius: 12px; overflow: hidden;">
@@ -123,7 +133,7 @@ app.post('/api/contact', async (req, res) => {
       `,
     });
 
-    console.log('✅ Client email sent:', clientResult);
+    console.log('✅ Client email sent to:', email);
     console.log(`✅ Form submitted by ${name} (${email})`);
 
     res.status(200).json({
@@ -132,8 +142,7 @@ app.post('/api/contact', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Email send error:', error.message);
-    console.error('❌ Full error:', JSON.stringify(error));
+    console.error('❌ Email error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Oops! Something went wrong. Please try again later.',
