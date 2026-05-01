@@ -3,156 +3,85 @@ const cors = require('cors');
 const path = require('path');
 const nodemailer = require('nodemailer');
 
-// Production-ல Render variables use பண்ணும், local-ல .env use பண்ணும்
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
-
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ─── Nodemailer Transporter (Gmail) ──────────────────────────
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,       // teamthenvyx@gmail.com
-    pass: process.env.GMAIL_APP_PASS,   // Gmail App Password
-  },
-});
-
-// Verify transporter on startup
-transporter.verify((error) => {
-  if (error) {
-    console.error('❌ Mail transporter error:', error.message);
-  } else {
-    console.log('✅ Mail transporter ready');
-  }
-});
-
-// ─── Middleware ───────────────────────────────────────────────
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ─── Frontend Serve ───────────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
 
-// ─── Health Check ─────────────────────────────────────────────
 app.get('/health', (req, res) => {
-  res.json({ status: 'Thenvyx Backend Running ✅' });
+  res.json({ status: 'OK' });
 });
 
-// ─── Contact Form API ─────────────────────────────────────────
 app.post('/api/contact', async (req, res) => {
   const { name, email, phone, subject, message, newsletter } = req.body;
 
+  console.log('📩 Form received from:', email);
+  console.log('GMAIL_USER:', process.env.GMAIL_USER);
+  console.log('GMAIL_APP_PASS set:', !!process.env.GMAIL_APP_PASS);
+
   if (!name || !email || !subject || !message) {
-    return res.status(400).json({
-      success: false,
-      message: 'Please fill in all required fields.',
-    });
+    return res.status(400).json({ success: false, message: 'Please fill in all required fields.' });
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Please enter a valid email address.',
-    });
-  }
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASS,
+    },
+  });
 
   const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
-  // ── Admin Email (to team) ────────────────────────────────────
-  const adminMailOptions = {
-    from: `"Thenvyx Website" <${process.env.GMAIL_USER}>`,
-    to: process.env.GMAIL_USER,
-    replyTo: email,
-    subject: `📩 New Contact: ${subject} — from ${name}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fc; border-radius: 12px; overflow: hidden;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">Thenvyx Tech</h1>
-          <p style="color: rgba(255,255,255,0.85); margin: 5px 0 0;">New Contact Form Submission</p>
-        </div>
-        <div style="padding: 30px; background: white; margin: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #667eea; font-weight: 600; width: 130px;">👤 Name</td>
-              <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${name}</td>
-            </tr>
-            <tr>
-              <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #667eea; font-weight: 600;">📧 Email</td>
-              <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;"><a href="mailto:${email}" style="color: #667eea;">${email}</a></td>
-            </tr>
-            <tr>
-              <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #667eea; font-weight: 600;">📱 Phone</td>
-              <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${phone || 'Not provided'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #667eea; font-weight: 600;">📋 Subject</td>
-              <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${subject}</td>
-            </tr>
-            <tr>
-              <td style="padding: 12px 0; color: #667eea; font-weight: 600;">📰 Newsletter</td>
-              <td style="padding: 12px 0; color: #333;">${newsletter === 'on' ? '✅ Subscribed' : '❌ Not subscribed'}</td>
-            </tr>
-          </table>
-          <div style="margin-top: 20px; background: #f8f9fc; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-            <p style="color: #667eea; font-weight: 600; margin: 0 0 8px;">💬 Message</p>
-            <p style="color: #555; margin: 0; line-height: 1.6;">${message.replace(/\n/g, '<br>')}</p>
-          </div>
-        </div>
-        <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
-          <p>© 2026 Thenvyx Tech | Received at ${istTime} IST</p>
-        </div>
-      </div>
-    `,
-  };
-
-  // ── Client Confirmation Email ────────────────────────────────
-  const clientMailOptions = {
-    from: `"Thenvyx Tech" <${process.env.GMAIL_USER}>`,
-    to: email,
-    subject: `✅ We received your message, ${name}!`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fc; border-radius: 12px; overflow: hidden;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">Thenvyx Tech</h1>
-          <p style="color: rgba(255,255,255,0.85); margin: 5px 0 0;">Message Received!</p>
-        </div>
-        <div style="padding: 30px; background: white; margin: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-          <h2 style="color: #333; margin-bottom: 15px;">Hi ${name}! 👋</h2>
-          <p style="color: #555; line-height: 1.8;">Thank you for reaching out to us. We have received your message and our team will get back to you within <strong style="color: #667eea;">24–48 business hours</strong>.</p>
-          <div style="background: #f8f9fc; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
-            <p style="color: #667eea; font-weight: 600; margin: 0 0 5px;">Your Enquiry</p>
-            <p style="color: #666; margin: 0;"><strong>Subject:</strong> ${subject}</p>
-          </div>
-          <p style="color: #555; line-height: 1.8;">Meanwhile, feel free to connect with us:</p>
-          <p style="color: #555;">📧 <a href="mailto:teamthenvyx@gmail.com" style="color: #667eea;">teamthenvyx@gmail.com</a></p>
-          <div style="text-align: center; margin-top: 25px;">
-            <a href="mailto:teamthenvyx@gmail.com" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: 600; display: inline-block;">Reply to Us</a>
-          </div>
-        </div>
-        <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
-          <p>© 2026 Thenvyx Tech | All Rights Reserved</p>
-          <p>This is an automated reply. Please do not reply directly to this email.</p>
-        </div>
-      </div>
-    `,
-  };
-
   try {
-    await transporter.sendMail(adminMailOptions);
-    await transporter.sendMail(clientMailOptions);
+    // Email to team
+    await transporter.sendMail({
+      from: `"Thenvyx Website" <${process.env.GMAIL_USER}>`,
+      to: process.env.GMAIL_USER,
+      replyTo: email,
+      subject: `New Contact: ${subject} from ${name}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Message:</strong><br>${message.replace(/\n/g, '<br>')}</p>
+        <p><strong>Newsletter:</strong> ${newsletter === 'on' ? 'Yes' : 'No'}</p>
+        <p><strong>Received:</strong> ${istTime} IST</p>
+      `,
+    });
 
-    console.log(`✅ Contact form submitted by ${name} (${email})`);
+    console.log('✅ Team email sent');
+
+    // Confirmation to client
+    await transporter.sendMail({
+      from: `"Thenvyx Tech" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: `We received your message, ${name}!`,
+      html: `
+        <h2>Hi ${name}!</h2>
+        <p>Thank you for reaching out to Thenvyx Tech.</p>
+        <p>We have received your message about <strong>${subject}</strong> and will get back to you within 24-48 business hours.</p>
+        <p>Team Thenvyx<br>teamthenvyx@gmail.com</p>
+      `,
+    });
+
+    console.log('✅ Client email sent to:', email);
+
     res.status(200).json({
       success: true,
       message: "Thank you! Your message has been sent successfully. We'll get back to you soon!",
     });
+
   } catch (error) {
-    console.error('❌ Email send error:', error.message);
+    console.error('❌ Email error:', error.message);
+    console.error('❌ Full error:', JSON.stringify(error));
     res.status(500).json({
       success: false,
       message: 'Oops! Something went wrong. Please try again later.',
@@ -160,12 +89,12 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-// ─── All other routes → index.html ───────────────────────────
 app.get('/{*path}', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ─── Start Server ─────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`🚀 Thenvyx Backend running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`GMAIL_USER: ${process.env.GMAIL_USER}`);
+  console.log(`GMAIL_APP_PASS set: ${!!process.env.GMAIL_APP_PASS}`);
 });
