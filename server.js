@@ -48,7 +48,7 @@ app.post('/api/contact', async (req, res) => {
     // Admin mail
     await resend.emails.send({
       from: 'Thenvyx Website <onboarding@resend.dev>',
-      to: process.env.GMAIL_USER,
+      to: [process.env.GMAIL_USER], 
       subject: `📩 New Contact: ${subject} — from ${name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fc; border-radius: 12px; overflow: hidden;">
