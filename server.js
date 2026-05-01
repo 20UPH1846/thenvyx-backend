@@ -1,10 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const TEAM_EMAIL = 'teamthenvyx@gmail.com';
 
 app.use(cors({ origin: '*' }));
 app.use(express.json());
@@ -12,67 +19,112 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK' });
+  res.json({ status: 'Thenvyx Backend Running ✅' });
 });
 
 app.post('/api/contact', async (req, res) => {
   const { name, email, phone, subject, message, newsletter } = req.body;
 
-  console.log('📩 Form received from:', email);
-  console.log('GMAIL_USER:', process.env.GMAIL_USER);
-  console.log('GMAIL_APP_PASS set:', !!process.env.GMAIL_APP_PASS);
-
   if (!name || !email || !subject || !message) {
-    return res.status(400).json({ success: false, message: 'Please fill in all required fields.' });
+    return res.status(400).json({
+      success: false,
+      message: 'Please fill in all required fields.',
+    });
   }
 
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASS,
-    },
-  });
-
-  const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please enter a valid email address.',
+    });
+  }
 
   try {
-    // Email to team
-    await transporter.sendMail({
-      from: `"Thenvyx Website" <${process.env.GMAIL_USER}>`,
-      to: process.env.GMAIL_USER,
-      replyTo: email,
-      subject: `New Contact: ${subject} from ${name}`,
+    // ── Email to Team ────────────────────────────────────────
+    const adminResult = await resend.emails.send({
+      from: 'Thenvyx Website <onboarding@resend.dev>',
+      to: [TEAM_EMAIL],
+      subject: `📩 New Contact: ${subject} — from ${name}`,
       html: `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-        <p><strong>Subject:</strong> ${subject}</p>
-        <p><strong>Message:</strong><br>${message.replace(/\n/g, '<br>')}</p>
-        <p><strong>Newsletter:</strong> ${newsletter === 'on' ? 'Yes' : 'No'}</p>
-        <p><strong>Received:</strong> ${istTime} IST</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fc; border-radius: 12px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Thenvyx Tech</h1>
+            <p style="color: rgba(255,255,255,0.85); margin: 5px 0 0;">New Contact Form Submission</p>
+          </div>
+          <div style="padding: 30px; background: white; margin: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #667eea; font-weight: 600; width: 130px;">👤 Name</td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #667eea; font-weight: 600;">📧 Email</td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;"><a href="mailto:${email}" style="color: #667eea;">${email}</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #667eea; font-weight: 600;">📱 Phone</td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${phone || 'Not provided'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #667eea; font-weight: 600;">📋 Subject</td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #333;">${subject}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 0; color: #667eea; font-weight: 600;">📰 Newsletter</td>
+                <td style="padding: 12px 0; color: #333;">${newsletter === 'on' ? '✅ Subscribed' : '❌ Not subscribed'}</td>
+              </tr>
+            </table>
+            <div style="margin-top: 20px; background: #f8f9fc; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+              <p style="color: #667eea; font-weight: 600; margin: 0 0 8px;">💬 Message</p>
+              <p style="color: #555; margin: 0; line-height: 1.6;">${message.replace(/\n/g, '<br>')}</p>
+            </div>
+          </div>
+          <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
+            <p>© 2026 Thenvyx Tech | Received at ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
+          </div>
+        </div>
       `,
     });
 
-    console.log('✅ Team email sent');
+    console.log('✅ Team email sent:', adminResult);
 
-    // Confirmation to client
-    await transporter.sendMail({
-      from: `"Thenvyx Tech" <${process.env.GMAIL_USER}>`,
-      to: email,
-      subject: `We received your message, ${name}!`,
+    // ── Confirmation Email to Client ─────────────────────────
+    // NOTE: On Resend free plan, this only delivers to verified emails.
+    // To send to ALL clients, verify your domain in Resend dashboard.
+    const clientResult = await resend.emails.send({
+      from: 'Thenvyx Tech <onboarding@resend.dev>',
+      to: [email],
+      subject: `✅ We received your message, ${name}!`,
       html: `
-        <h2>Hi ${name}!</h2>
-        <p>Thank you for reaching out to Thenvyx Tech.</p>
-        <p>We have received your message about <strong>${subject}</strong> and will get back to you within 24-48 business hours.</p>
-        <p>Team Thenvyx<br>teamthenvyx@gmail.com</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fc; border-radius: 12px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Thenvyx Tech</h1>
+            <p style="color: rgba(255,255,255,0.85); margin: 5px 0 0;">Message Received!</p>
+          </div>
+          <div style="padding: 30px; background: white; margin: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <h2 style="color: #333; margin-bottom: 15px;">Hi ${name}! 👋</h2>
+            <p style="color: #555; line-height: 1.8;">Thank you for reaching out to us. We have received your message and our team will get back to you within <strong style="color: #667eea;">24–48 business hours</strong>.</p>
+            <div style="background: #f8f9fc; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
+              <p style="color: #667eea; font-weight: 600; margin: 0 0 5px;">Your Enquiry</p>
+              <p style="color: #666; margin: 0;"><strong>Subject:</strong> ${subject}</p>
+            </div>
+            <p style="color: #555; line-height: 1.8;">Meanwhile, feel free to connect with us:</p>
+            <p style="color: #555;">📧 <a href="mailto:${TEAM_EMAIL}" style="color: #667eea;">${TEAM_EMAIL}</a></p>
+            <div style="text-align: center; margin-top: 25px;">
+              <a href="mailto:${TEAM_EMAIL}" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: 600; display: inline-block;">Reply to Us</a>
+            </div>
+          </div>
+          <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
+            <p>© 2026 Thenvyx Tech | All Rights Reserved</p>
+            <p>This is an automated reply. Please do not reply directly to this email.</p>
+          </div>
+        </div>
       `,
     });
 
-    console.log('✅ Client email sent to:', email);
+    console.log('✅ Client email sent:', clientResult);
+    console.log(`✅ Form submitted by ${name} (${email})`);
 
     res.status(200).json({
       success: true,
@@ -80,7 +132,7 @@ app.post('/api/contact', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Email error:', error.message);
+    console.error('❌ Email send error:', error.message);
     console.error('❌ Full error:', JSON.stringify(error));
     res.status(500).json({
       success: false,
@@ -94,7 +146,5 @@ app.get('/{*path}', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`GMAIL_USER: ${process.env.GMAIL_USER}`);
-  console.log(`GMAIL_APP_PASS set: ${!!process.env.GMAIL_APP_PASS}`);
+  console.log(`🚀 Thenvyx Backend running at http://localhost:${PORT}`);
 });
