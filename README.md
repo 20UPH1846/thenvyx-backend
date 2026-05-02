@@ -1,134 +1,126 @@
-# Thenvyx Tech — Backend Setup Guide
+# Thenvyx Tech Website
 
-## 📁 Folder Structure
+A modern, responsive landing page for Thenvyx Tech, showcasing web development and design services with advanced animations and interactive features.
 
+## ✨ Features
+
+- **Loading Screen**: Elegant loading animation on page load
+- **Typing Animation**: Dynamic text animation in the hero section
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Interactive Navigation**: Hamburger menu with smooth animations
+- **Scroll Animations**: Elements animate into view with staggered effects
+- **Parallax Effects**: Subtle parallax scrolling on hero image
+- **Particle Background**: Animated particle effects in the hero section
+- **Portfolio Showcase**: Interactive portfolio grid with hover effects
+- **Testimonials Carousel**: Horizontal scrolling testimonials
+- **Advanced Form Handling**: Animated form submission with validation
+- **Scroll Progress Indicator**: Visual progress bar at the top
+- **Back to Top Button**: Smooth scroll to top functionality
+- **Modern UI/UX**: Clean design with gradients, shadows, and transitions
+
+## 🛠️ Technologies Used
+
+- **HTML5**: Semantic markup with accessibility features
+- **CSS3**: Advanced styling with Flexbox, Grid, and CSS animations
+- **JavaScript (ES6+)**: Interactive functionality and animations
+- **Font Awesome**: Icon library for visual elements
+- **Google Fonts**: Poppins font family for typography
+
+## 📁 File Structure
+
+/
+├── index.html              # Main HTML file with enhanced structure
+├── style.css               # Comprehensive stylesheet with animations
+├── script.js               # Advanced JavaScript functionality
+├── README.md               # Project documentation
+└── image/                  # Logo and image assets
+    ├── Thenvyx_Technology-logo-3-removebg-preview.png
+    └── ... (other logo variations)
+
+## 🚀 Getting Started
+
+1. Clone or download the repository
+2. Open 'index.html' in any modern web browser
+3. The website is ready to view and interact with
+
+## 🎨 Key Improvements
+
+### UI Enhancements:
+- **Modern Color Palette**: Beautiful purple gradient theme
+- **Typography**: Improved font hierarchy and readability
+- **Visual Effects**: Shadows, gradients, and smooth transitions
+- **Interactive Elements**: Hover effects and micro-animations
+- **Layout**: Responsive grid and flexbox layouts
+
+### JavaScript Features:
+- **Loading Screen**: 2-second loading animation
+- **Typing Effect**: Cycling text animation in hero
+- **Scroll Animations**: Intersection Observer API for performance
+- **Parallax Scrolling**: Subtle depth effects
+- **Particle System**: Animated background particles
+- **Form Enhancement**: Animated submission feedback
+- **Navigation**: Smooth scrolling and mobile menu
+- **Progress Tracking**: Scroll progress indicator
+
+### Animations:
+- **Fade-in Effects**: Staggered element appearances
+- **Hover Animations**: Interactive card and button effects
+- **Scroll Indicators**: Mouse scroll animation
+- **Loading Spinner**: Custom CSS spinner
+- **Button Interactions**: Scale and color transitions
+
+## 📱 Responsive Design
+
+- **Mobile-First**: Optimized for mobile devices
+- **Tablet Support**: Adaptive layouts for tablets
+- **Desktop Enhancement**: Full feature set on larger screens
+- **Touch-Friendly**: Proper touch targets and interactions
+
+## 🎯 Performance Features
+
+- **Optimized Animations**: Hardware-accelerated CSS transforms
+- **Efficient JavaScript**: Minimal DOM manipulation
+- **Lazy Loading**: Intersection Observer for animations
+- **Smooth Scrolling**: Native browser smooth scrolling
+
+## 🔧 Customization
+
+### Colors:
+Modify the CSS custom properties in `style.css`:
+```css
+/* Primary gradient colors */
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 ```
-thenvyx-backend/
-├── server.js          ← Express server (main file)
-├── script.js          ← Updated frontend script (API call பண்றது)
-├── .env.example       ← Environment variables template
-├── .gitignore         ← .env-ஐ Git-ல போகாம தடுக்கும்
-├── package.json
-└── README.md
-```
+
+### Content:
+Update text, images, and links in `index.html`
+
+### Animations:
+Adjust timing and effects in `style.css` and `script.js`
+
+### Functionality:
+Add or modify features in `script.js`
+
+## 🌐 Browser Support
+
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
+
+## 📄 License
+
+© 2026 Thenvyx Tech. All rights reserved.
 
 ---
 
-## 🔧 Step 1 — Gmail App Password எடுக்கணும்
+**Experience the future of web design with Thenvyx Tech!**
 
-உங்க regular Gmail password வேலை செய்யாது. App Password வேணும்:
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
 
-1. **Google Account** → [myaccount.google.com](https://myaccount.google.com) போங்க
-2. **Security** → **2-Step Verification** ON பண்ணுங்க (இல்லன்னா App Password வராது)
-3. **Security** → Search bar-ல **"App passwords"** type பண்ணுங்க
-4. App name: `Thenvyx Website` → **Create** → **16-digit password** கிடைக்கும்
-5. அந்த password-ஐ copy பண்ணுங்க (ஒரே ஒரு தடவைதான் காட்டும்!)
+## License
 
----
-
-## 🔧 Step 2 — .env File Setup
-
-```bash
-# .env.example ஐ copy பண்ணி .env create பண்ணுங்க
-cp .env.example .env
-```
-
-`.env` file-ஐ திறந்து fill பண்ணுங்க:
-
-```env
-GMAIL_USER=teamthenvyx@gmail.com
-GMAIL_APP_PASS=abcd efgh ijkl mnop    ← உங்க 16-digit App Password
-PORT=3000
-```
-
----
-
-## 🚀 Step 3 — Server Start பண்ணுங்க
-
-```bash
-# Dependencies install (first time மட்டும்)
-npm install
-
-# Server start
-npm start
-
-# Development mode (auto-restart)
-npm run dev
-```
-
-Terminal-ல இது வந்தா சரியா இருக்கு:
-```
-🚀 Thenvyx Backend running at http://localhost:3000
-```
-
----
-
-## 🌐 Step 4 — Frontend Connect பண்ணுங்க
-
-உங்க website folder-ல **script.js** ஐ இந்த backend-ல இருக்கற `script.js` கொண்டு replace பண்ணுங்க.
-
-> **Note:** Production-ல deploy பண்ணும்போது `script.js`-ல URL மாத்துங்க:
-> ```js
-> // இப்போ:
-> fetch('http://localhost:3000/api/contact', ...)
->
-> // Production (உங்க server URL):
-> fetch('https://your-domain.com/api/contact', ...)
-> ```
-
----
-
-## 📧 Email Flow
-
-```
-User fills form
-      ↓
-POST /api/contact
-      ↓
-    Backend validates
-      ↓
-  ┌───────────────────────┐
-  │  Email 1: Admin alert │  → teamthenvyx@gmail.com
-  │  Email 2: Auto-reply  │  → User's email
-  └───────────────────────┘
-      ↓
-  JSON response → Frontend shows success/error
-```
-
----
-
-## 🌍 Free Deployment Options
-
-| Platform   | Steps |
-|------------|-------|
-| **Railway** | `railway up` — Easiest, free tier available |
-| **Render**  | GitHub connect, auto-deploy |
-| **Fly.io**  | `fly launch` |
-
-### Railway Deployment (Easiest):
-```bash
-# Railway CLI install
-npm install -g @railway/cli
-
-# Login & deploy
-railway login
-railway init
-railway up
-
-# Environment variables Railway dashboard-ல add பண்ணுங்க
-```
-
----
-
-## ❓ Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| `Invalid login` error | App Password சரியா இருக்கா check பண்ணுங்க |
-| `Connection refused` | Server running-ஆ? `npm start` பண்ணுங்க |
-| CORS error | `server.js`-ல origin update பண்ணுங்க |
-| Email not received | Spam folder check பண்ணுங்க |
-
----
-
-© 2026 Thenvyx Tech
+© 2026 Thenvyx Tech. All rights reserved.
